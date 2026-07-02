@@ -1,0 +1,40 @@
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (obimni CSV fajlovi - ne guramo na GitHub)
+data/raw/*.csv
+data/processed/*.csv
+data/processed/*.parquet
+
+# Ali zadrzavamo folder strukturu i eventualni sample
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Modeli i rezultati (mogu biti veliki - .h5, .pkl, .txt)
+results/*.h5
+results/*.pkl
+results/*.json
+results/*.png
+!results/.gitkeep
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Environment varijable (ako budete imali API kljuceve)
+.env

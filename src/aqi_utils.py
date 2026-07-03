@@ -1,11 +1,15 @@
 import pandas as pd
 
+
+# Granicne vrednosti po zvanicnoj SEPA metodologiji za PM2.5 (ug/m3):
+# Izvor: https://vazduh.sepa.gov.rs/
 AQI_BINS = [
-    (25, "Odlican"),
-    (50, "Dobar"),
-    (75, "Prihvatljiv"),
-    (100, "Zagadjen"),
-    (float("inf"), "Jako zagadjen"),
+    (5,            "Dobar"),
+    (15,           "Prihvatljiv"),
+    (50,           "Umeren"),
+    (90,           "Zagadjen"),
+    (140,          "Veoma zagadjen"),
+    (float("inf"), "Izuzetno zagadjen"),
 ]
 
 

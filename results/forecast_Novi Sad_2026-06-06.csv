@@ -1,0 +1,25 @@
+grad,datum,sat,knn_pm2_5,knn_aqi,lstm_pm2_5,lstm_aqi,xgb_pm2_5,xgb_aqi,lgbm_pm2_5,lgbm_aqi
+Novi Sad,2026-06-06,00:00,10.42,Prihvatljiv,9.59,Prihvatljiv,9.21,Prihvatljiv,8.97,Prihvatljiv
+Novi Sad,2026-06-06,01:00,10.37,Prihvatljiv,9.24,Prihvatljiv,9.3,Prihvatljiv,8.79,Prihvatljiv
+Novi Sad,2026-06-06,02:00,10.34,Prihvatljiv,9.19,Prihvatljiv,9.3,Prihvatljiv,8.9,Prihvatljiv
+Novi Sad,2026-06-06,03:00,10.36,Prihvatljiv,9.24,Prihvatljiv,9.78,Prihvatljiv,8.95,Prihvatljiv
+Novi Sad,2026-06-06,04:00,10.32,Prihvatljiv,9.18,Prihvatljiv,9.47,Prihvatljiv,9.43,Prihvatljiv
+Novi Sad,2026-06-06,05:00,10.48,Prihvatljiv,8.75,Prihvatljiv,8.16,Prihvatljiv,8.47,Prihvatljiv
+Novi Sad,2026-06-06,06:00,9.83,Prihvatljiv,8.16,Prihvatljiv,8.05,Prihvatljiv,7.9,Prihvatljiv
+Novi Sad,2026-06-06,07:00,8.97,Prihvatljiv,7.59,Prihvatljiv,7.25,Prihvatljiv,7.59,Prihvatljiv
+Novi Sad,2026-06-06,08:00,8.51,Prihvatljiv,7.12,Prihvatljiv,7.1,Prihvatljiv,7.73,Prihvatljiv
+Novi Sad,2026-06-06,09:00,8.24,Prihvatljiv,6.84,Prihvatljiv,7.14,Prihvatljiv,7.73,Prihvatljiv
+Novi Sad,2026-06-06,10:00,8.41,Prihvatljiv,6.72,Prihvatljiv,7.08,Prihvatljiv,7.68,Prihvatljiv
+Novi Sad,2026-06-06,11:00,8.31,Prihvatljiv,6.73,Prihvatljiv,6.87,Prihvatljiv,7.26,Prihvatljiv
+Novi Sad,2026-06-06,12:00,7.91,Prihvatljiv,6.8,Prihvatljiv,6.76,Prihvatljiv,7.2,Prihvatljiv
+Novi Sad,2026-06-06,13:00,7.6,Prihvatljiv,6.9,Prihvatljiv,6.62,Prihvatljiv,7.2,Prihvatljiv
+Novi Sad,2026-06-06,14:00,7.42,Prihvatljiv,7.06,Prihvatljiv,6.54,Prihvatljiv,7.11,Prihvatljiv
+Novi Sad,2026-06-06,15:00,7.05,Prihvatljiv,7.23,Prihvatljiv,6.57,Prihvatljiv,7.11,Prihvatljiv
+Novi Sad,2026-06-06,16:00,7.27,Prihvatljiv,7.47,Prihvatljiv,7.04,Prihvatljiv,7.24,Prihvatljiv
+Novi Sad,2026-06-06,17:00,7.87,Prihvatljiv,7.73,Prihvatljiv,7.33,Prihvatljiv,7.46,Prihvatljiv
+Novi Sad,2026-06-06,18:00,8.55,Prihvatljiv,7.98,Prihvatljiv,7.63,Prihvatljiv,7.86,Prihvatljiv
+Novi Sad,2026-06-06,19:00,8.87,Prihvatljiv,8.23,Prihvatljiv,8.62,Prihvatljiv,8.75,Prihvatljiv
+Novi Sad,2026-06-06,20:00,9.08,Prihvatljiv,8.45,Prihvatljiv,9.63,Prihvatljiv,9.61,Prihvatljiv
+Novi Sad,2026-06-06,21:00,9.4,Prihvatljiv,8.54,Prihvatljiv,9.63,Prihvatljiv,9.77,Prihvatljiv
+Novi Sad,2026-06-06,22:00,9.69,Prihvatljiv,8.58,Prihvatljiv,9.63,Prihvatljiv,9.64,Prihvatljiv
+Novi Sad,2026-06-06,23:00,9.5,Prihvatljiv,8.58,Prihvatljiv,9.26,Prihvatljiv,9.5,Prihvatljiv

@@ -13,7 +13,7 @@ ALL_CITIES = {
     for city_path in sorted(Path("data/raw").glob("*.csv"))
 }
 
-KEY_CITIES = ["Beograd", "Novi Sad", "Nis", "Bor", "Valjevo", "Kostolac", "Smederevo"]
+KEY_CITIES = ["Beograd", "Novi Sad", "Nis", "Bor", "Valjevo", "Kostolac", "Smederevo", "Kopaonik"]
 
 RESULTS_DIR = Path("results")
 

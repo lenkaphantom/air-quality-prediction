@@ -5,6 +5,8 @@ from src.aqi_utils import pm25_to_aqi_category
 from src.evaluate import compare_models
 from src.models.knn_model import run_knn_pipeline, save_knn_model, DEFAULT_K, DEFAULT_WEIGHTS
 from src.models.lstm_model import run_lstm_pipeline, save_lstm_model
+from src.models.xgboost_model import run_xgb_pipeline, save_xgb_model, DEFAULT_N_ESTIMATORS, DEFAULT_MAX_DEPTH, DEFAULT_LEARNING_RATE, DEFAULT_SUBSAMPLE
+from src.models.lightgbm_model import run_lgbm_pipeline, save_lgbm_model, DEFAULT_NUM_LEAVES
 
 ALL_CITIES = {
     city_path.stem: str(city_path)
@@ -18,8 +20,10 @@ RESULTS_DIR = Path("results")
 
 def models_exist(city_name: str) -> dict[str, bool]:
     return {
-        "knn":  (RESULTS_DIR / "knn"  / f"knn_model_{city_name}.pkl").exists(),
-        "lstm": (RESULTS_DIR / "lstm" / f"lstm_model_{city_name}.keras").exists(),
+        "knn":      (RESULTS_DIR / "knn"       / f"knn_model_{city_name}.pkl").exists(),
+        "lstm":     (RESULTS_DIR / "lstm"      / f"lstm_model_{city_name}.keras").exists(),
+        "xgboost":  (RESULTS_DIR / "xgboost"  / f"xgboost_model_{city_name}.pkl").exists(),
+        "lightgbm": (RESULTS_DIR / "lightgbm" / f"lightgbm_model_{city_name}.pkl").exists(),
     }
 
 
@@ -28,11 +32,13 @@ def train_city(
     city_name: str,
     train_knn: bool = True,
     train_lstm: bool = True,
+    train_xgb: bool = True,       
+    train_lgbm: bool = True,      
     fast: bool = False,
 ) -> dict:
     print(f"\n{'='*60}\n  {city_name}\n{'='*60}")
 
-    knn_output = lstm_output = None
+    knn_output = lstm_output = xgb_output = lgbm_output = None
 
     if train_knn:
         print("\n--- Treniram KNN ---")
@@ -56,28 +62,65 @@ def train_city(
     else:
         print("\n[LSTM] preskoceno.")
 
-    if knn_output and lstm_output:
-        knn_aqi  = pd.Series(knn_output["y_pred"]).apply(pm25_to_aqi_category)
-        lstm_aqi = pd.Series(lstm_output["y_pred"]).apply(pm25_to_aqi_category)
+    if train_xgb:
+        print("\n--- Treniram XGBoost ---")
+        if fast:
+            print(f"  [brzi rezim] n_estimators={DEFAULT_N_ESTIMATORS}, max_depth={DEFAULT_MAX_DEPTH} (bez GridSearchCV)")
+        xgb_params = {
+            "n_estimators":  DEFAULT_N_ESTIMATORS,
+            "max_depth":     DEFAULT_MAX_DEPTH,
+            "learning_rate": DEFAULT_LEARNING_RATE,
+            "subsample":     DEFAULT_SUBSAMPLE,
+        } if fast else None
+        xgb_output = run_xgb_pipeline(csv_path, city_name=city_name, params=xgb_params)
+        print(xgb_output["result"])
+        save_xgb_model(xgb_output["model"], city_name)
+    else:
+        print("\n[XGBoost] preskoceno.")
 
+    if train_lgbm:
+        print("\n--- Treniram LightGBM ---")
+        if fast:
+            print(f"  [brzi rezim] num_leaves={DEFAULT_NUM_LEAVES} (bez GridSearchCV)")
+        lgbm_params = {
+            "num_leaves":    DEFAULT_NUM_LEAVES,
+            "learning_rate": DEFAULT_LEARNING_RATE,
+            "subsample":     DEFAULT_SUBSAMPLE,
+        } if fast else None
+        lgbm_output = run_lgbm_pipeline(csv_path, city_name=city_name, params=lgbm_params)
+        print(lgbm_output["result"])
+        save_lgbm_model(lgbm_output["model"], city_name)
+    else:
+        print("\n[LightGBM] preskoceno.")
+
+    all_results = [
+        out["result"]
+        for out in [knn_output, lstm_output, xgb_output, lgbm_output]
+        if out is not None
+    ]
+    if len(all_results) >= 2:
         print("\n--- Raspodela AQI kategorija na test skupu ---")
-        print("KNN:\n",  knn_aqi.value_counts().to_string())
-        print("LSTM:\n", lstm_aqi.value_counts().to_string())
+        for label, out in [("KNN", knn_output), ("LSTM", lstm_output),
+                           ("XGBoost", xgb_output), ("LightGBM", lgbm_output)]:
+            if out is not None:
+                aqi = pd.Series(out["y_pred"]).apply(pm25_to_aqi_category)
+                print(f"{label}:\n", aqi.value_counts().to_string())
 
-        comparison = compare_models([knn_output["result"], lstm_output["result"]])
-        print("\n--- Uporedna tabela (KNN vs LSTM) ---")
+        comparison = compare_models(all_results)
+        print("\n--- Uporedna tabela (svi modeli) ---")
         print(comparison.to_string(index=False))
 
     return {
-        "knn":  knn_output,
-        "lstm": lstm_output,
+        "knn":      knn_output,
+        "lstm":     lstm_output,
+        "xgboost":  xgb_output,
+        "lightgbm": lgbm_output,
     }
 
 
-def _ask_train(city_name: str, fast: bool) -> tuple[bool, bool]:
+def _ask_train(city_name: str, fast: bool) -> tuple[bool, bool, bool, bool]:
     exists = models_exist(city_name)
-    train_knn_flag  = True
-    train_lstm_flag = True
+    flags = {"knn": True, "lstm": True, "xgboost": True, "lightgbm": True}
 
     for model_name, model_exists in exists.items():
         if model_exists:
@@ -87,25 +130,22 @@ def _ask_train(city_name: str, fast: bool) -> tuple[bool, bool]:
                 if odgovor in ("d", "da", "y", "yes"):
                     break
                 elif odgovor in ("n", "ne", "no"):
-                    if model_name == "knn":
-                        train_knn_flag = False
-                    else:
-                        train_lstm_flag = False
+                    flags[model_name] = False
                     break
                 print("  Unesite 'd' (da) ili 'n' (ne).")
 
-    return train_knn_flag, train_lstm_flag
+    return flags["knn"], flags["lstm"], flags["xgboost"], flags["lightgbm"]
 
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Treniranje KNN i LSTM modela za predikciju PM2.5.")
-    parser.add_argument("--city", type=str, default="Beograd")
-    parser.add_argument("--all",  action="store_true", help="Svi gradovi")
-    parser.add_argument("--key",  action="store_true", help=f"Kljucni gradovi: {', '.join(KEY_CITIES)}")
-    parser.add_argument("--fast", action="store_true", help="Brzi rezim: preskoci GridSearchCV za KNN")
-    parser.add_argument("--force", action="store_true", help="Treniraj ponovo cak i ako modeli postoje (bez pitanja)")
+    parser = argparse.ArgumentParser(description="Treniranje svih modela za predikciju PM2.5.")
+    parser.add_argument("--city",  type=str, default="Beograd")
+    parser.add_argument("--all",   action="store_true", help="Svi gradovi")
+    parser.add_argument("--key",   action="store_true", help=f"Kljucni gradovi: {', '.join(KEY_CITIES)}")
+    parser.add_argument("--fast",  action="store_true", help="Brzi rezim: preskoci GridSearchCV")
+    parser.add_argument("--force", action="store_true", help="Treniraj ponovo cak i ako modeli postoje")
     args = parser.parse_args()
 
     if args.all or args.key:
@@ -117,25 +157,33 @@ if __name__ == "__main__":
 
         for city_name, csv_path in city_subset.items():
             if args.force:
-                do_knn, do_lstm = True, True
+                do_knn = do_lstm = do_xgb = do_lgbm = True
             else:
-                do_knn, do_lstm = _ask_train(city_name, args.fast)
+                do_knn, do_lstm, do_xgb, do_lgbm = _ask_train(city_name, args.fast)
 
-            if not do_knn and not do_lstm:
+            if not any([do_knn, do_lstm, do_xgb, do_lgbm]):
                 print(f"  Preskacam {city_name}.")
                 continue
 
             try:
-                output = train_city(csv_path, city_name, train_knn=do_knn, train_lstm=do_lstm, fast=args.fast)
+                output = train_city(
+                    csv_path, city_name,
+                    train_knn=do_knn, train_lstm=do_lstm,
+                    train_xgb=do_xgb, train_lgbm=do_lgbm,
+                    fast=args.fast,
+                )
                 row = {"Grad": city_name}
-                if output["knn"]:
-                    row |= {"KNN RMSE": output["knn"]["result"]["RMSE"],
-                             "KNN MAE":  output["knn"]["result"]["MAE"],
-                             "KNN R2":   output["knn"]["result"]["R2"]}
-                if output["lstm"]:
-                    row |= {"LSTM RMSE": output["lstm"]["result"]["RMSE"],
-                             "LSTM MAE":  output["lstm"]["result"]["MAE"],
-                             "LSTM R2":   output["lstm"]["result"]["R2"]}
+                for model_key, label_prefix in [
+                    ("knn", "KNN"), ("lstm", "LSTM"),
+                    ("xgboost", "XGB"), ("lightgbm", "LGBM"),
+                ]:
+                    if output[model_key]:
+                        res = output[model_key]["result"]
+                        row |= {
+                            f"{label_prefix} RMSE": res["RMSE"],
+                            f"{label_prefix} MAE":  res["MAE"],
+                            f"{label_prefix} R2":   res["R2"],
+                        }
                 all_results.append(row)
             except Exception as e:
                 print(f"\n[GRESKA] {city_name}: {e}")
@@ -164,11 +212,16 @@ if __name__ == "__main__":
         csv_path = ALL_CITIES.get(args.city, f"data/raw/{args.city}.csv")
 
         if args.force:
-            do_knn, do_lstm = True, True
+            do_knn = do_lstm = do_xgb = do_lgbm = True
         else:
-            do_knn, do_lstm = _ask_train(args.city, args.fast)
+            do_knn, do_lstm, do_xgb, do_lgbm = _ask_train(args.city, args.fast)
 
-        if do_knn or do_lstm:
-            train_city(csv_path, args.city, train_knn=do_knn, train_lstm=do_lstm, fast=args.fast)
+        if any([do_knn, do_lstm, do_xgb, do_lgbm]):
+            train_city(
+                csv_path, args.city,
+                train_knn=do_knn, train_lstm=do_lstm,
+                train_xgb=do_xgb, train_lgbm=do_lgbm,
+                fast=args.fast,
+            )
         else:
             print("Treniranje preskoceno.")
